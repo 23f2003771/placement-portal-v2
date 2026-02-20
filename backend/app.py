@@ -1,5 +1,6 @@
 from flask import Flask
 from models import db, User
+from flask_jwt_extended import JWTManager
 
 
 def create_app():
@@ -7,6 +8,12 @@ def create_app():
     return app
 
 app = create_app()
+
+app.config['JWT_SECRET_KEY'] = "super-secret"
+jwt = JWTManager(app)
+
+from routes import api
+api.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db.init_app(app)
@@ -21,7 +28,7 @@ if __name__ == "__main__":
         admin = User.query.filter_by(email='admin@gmail.com').first()
 
         if not admin:
-            admin = User(email='admin@gmail.com', password_hash='admin', role='admin', name='Admin User')
+            admin = User(email='admin@gmail.com', password_hash='admin', role='admin')
             db.session.add(admin)
             db.session.commit()
             print("Admin user created with email: admin@gmail.com and password: admin")
@@ -29,3 +36,5 @@ if __name__ == "__main__":
             print("Admin user already exists with email: admin@gmail.com and password: admin")
 
     app.run(debug=True)
+
+
