@@ -1,5 +1,5 @@
 from flask_restful import Api, Resource
-from flask import request
+from flask import app, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_caching import Cache
 from models import db, User, StudentProfile, CompanyProfile, PlacementDrive, Application
@@ -58,7 +58,7 @@ class UserLogin(Resource):
         if not data or 'email' not in data or 'password_hash' not in data or not data['email'] or not data['password_hash']:
             return {'message' : 'email and password is required!'}, 400
         
-        user = User.query.filter_by(email=data['email'], password_hash=data['password_hash']).first()
+        user = User.query.filter_by(email=data['email'], password_hash=data['password_hash'], is_active=True).first()
 
         if not user:
             return {'message': 'invalid credentials!'}, 401
@@ -68,3 +68,98 @@ class UserLogin(Resource):
         return {'message': 'Login successful!', 'token': token}, 200
 
 api.add_resource(UserLogin, '/login')
+
+
+class AdminDashboard(Resource):
+
+    @jwt_required()
+    def get(self):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if user.role != "admin":
+            return {"message": "Admin Privlage Required!"}, 403
+        
+        students = StudentProfile.query.all()
+        companies = CompanyProfile.query.all()
+        drives = PlacementDrive.query.all()
+        applications = Application.query.all()
+
+        students_list = []
+        companies_list = []
+        drives_list = []
+        applications_list = []
+
+        for stu in students:
+            students_list.append({"email": stu.user.email, "full_name": stu.full_name, "branch": stu.branch, "year": stu.year, "cgpa": stu.cgpa, "phone": stu.phone, "resume_path": stu.resume_path, "is_blacklisted": stu.is_blacklisted})
+
+        for comp in companies:
+            companies_list.append({"email": comp.user.email, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "approval_status": comp.approval_status, "is_blacklisted": comp.is_blacklisted})
+
+        for drive in drives:
+            drives_list.append({"drive_name": drive.drive_name, "company_email": drive.company.user.email, "description": drive.description, "deadline": drive.deadline, "is_active": drive.is_active})
+        
+        for apl in applications:
+            applications_list.append({"student_email": apl.student.user.email, "drive_name": apl.drive.drive_name, "applied_at": apl.applied_at, "status": apl.status, "remark": apl.remark})
+            
+        return {"students": students_list, "companies": companies_list, "drives": drives_list, "applications": applications_list}, 200
+
+api.add_resource(AdminDashboard, '/admin/dashboard')
+
+        
+class AdminAction(Resource):
+    @jwt_required()
+    def put(self, id):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if user.role != "admin":
+            return {"message": "Admin Privlage Required!"}, 403
+        
+        data = request.get_json()
+        
+        target_user = User.query.filter_by(id=id).first()
+        drive = PlacementDrive.query.filter_by(id=id).first()
+        if not target_user and data["action"] in ["blacklist", "unblacklist"]:
+            return {"message": "User or Drive not found!"}, 404
+        elif not drive and data["action"] == "completed":
+            return {"message": "Drive not found!"}, 404
+        student_profile = StudentProfile.query.filter_by(user_id=id).first()
+        company_profile = CompanyProfile.query.filter_by(user_id=id).first()
+
+        if data['action'] == "completed" and drive:
+            drive.status = "completed"
+        elif data['action'] == "blacklist" and student_profile:
+            student_profile.is_blacklisted = True
+            target_user.is_active = False
+            for apl in student_profile.applications:
+                apl.status = "rejected"
+                apl.remark = "Student blacklisted by admin"
+        elif data['action'] == "unblacklist" and student_profile:
+            student_profile.is_blacklisted = False
+            target_user.is_active = True
+            for apl in student_profile.applications:
+                if apl.status == "rejected" and apl.remark == "Student blacklisted by admin":
+                    apl.status = "applied"
+                    apl.remark = None
+        elif data['action'] == "blacklist" and company_profile:
+            company_profile.is_blacklisted = True
+            target_user.is_active = False
+            for drive in company_profile.drives:
+                drive.status = "rejected"
+                for apl in drive.applications:
+                    apl.status = "rejected"
+                    apl.remark = "Company blacklisted by admin"
+        elif data['action'] == "unblacklist" and company_profile:
+            company_profile.is_blacklisted = False
+            target_user.is_active = True
+            for drive in company_profile.drives:
+                if drive.status == "rejected":
+                    drive.status = "pending"
+                    for apl in drive.applications:
+                        if apl.status == "rejected" and apl.remark == "Company blacklisted by admin":
+                            apl.status = "applied"
+                            apl.remark = None
+        else:
+            return {"message": "Invalid action!"}, 400
+        
+        db.session.commit()
+        return {"message": f"User {data['action']}ed successfully!"}, 200
+    
+api.add_resource(AdminAction, '/admin/action/<int:id>')
