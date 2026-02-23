@@ -24,7 +24,7 @@ class StudentProfile(db.Model):
     resume_path = db.Column(db.String(256))
     is_blacklisted = db.Column(db.Boolean, default=False)
 
-    user = db.relationship('User', backref='student_profile')
+    user = db.relationship('User', backref=db.backref('student_profile', uselist=False))
 
 
 class CompanyProfile(db.Model):
@@ -37,7 +37,7 @@ class CompanyProfile(db.Model):
     approval_status = db.Column(db.String(20), default='pending')
     is_blacklisted = db.Column(db.Boolean, default=False)
 
-    user = db.relationship('User', backref='company_profile')
+    user = db.relationship('User', backref=db.backref('company_profile', uselist=False))
 
 
 class PlacementDrive(db.Model):
@@ -51,7 +51,7 @@ class PlacementDrive(db.Model):
     eligiblility_criteria= db.Column(db.Text)
     application_deadline = db.Column(db.DateTime)
     interview_type = db.Column(db.String(50))
-    status = db.Column(db.String(20), default='pending')
+    status = db.Column(db.String(20), default='ongoing')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     company = db.relationship('CompanyProfile', backref='drives')
