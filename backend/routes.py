@@ -246,3 +246,55 @@ class CompanyDashboard(Resource):
         return {"message": f"Application {data['status']} successfully!"}, 200
     
 api.add_resource(CompanyDashboard, '/company/dashboard', '/company/dashboard/<int:id>')
+
+
+class StudentDashboard(Resource):
+    @jwt_required()
+    def get(self):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if user.role != "student":
+            return {"message": "Student Privlage Required!"}, 403
+        
+        companies = CompanyProfile.query.filter_by(approval_status="approved", is_blacklisted=False).all()
+        applications = Application.query.filter_by(student_id=user.student_profile.id).all()
+
+        applied_drives = []
+        for apl in applications:
+            applied_drives.append({"drive_name": apl.drive.drive_name, "company_name": apl.drive.company.company_name, "job_title": apl.drive.job_title, "description": apl.drive.description, "application_deadline": apl.drive.application_deadline, "status": apl.status, "remark": apl.remark})
+        
+        organizations = []
+        for comp in companies:
+            drives = []
+            for drive in comp.drives:
+                drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.description, "application_deadline": drive.application_deadline, "eligiblility_criteria": drive.eligiblility_criteria, "interview_type": drive.interview_type})
+            organizations.append({"company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "drives": drives})
+        
+        return {"applied_drives": applied_drives, "organizations": organizations}, 200
+    
+
+    @jwt_required()
+    def post(self, id):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if user.role != "student":
+            return {"message": "Student Privlage Required!"}, 403
+        
+        drive = PlacementDrive.query.filter_by(id=id, status="ongoing").first()
+
+        if not drive:
+            return {"message": "Drive not found or not accepting applications!"}, 404
+        
+        if drive.company.is_blacklisted:
+            return {"message": "Cannot apply to drives of blacklisted companies!"}, 403
+        
+        existing_application = Application.query.filter_by(student_id=user.student_profile.id, drive_id=drive.id).first()
+        if existing_application:
+            return {"message": "Already applied to this drive!"}, 409
+        
+        new_application = Application(student_id=user.student_profile.id, drive_id=drive.id)
+        
+        db.session.add(new_application)
+        db.session.commit()
+
+        return {"message": "Applied to drive successfully!"}, 201
+    
+api.add_resource(StudentDashboard, '/student/dashboard', '/student/dashboard/<int:id>')
