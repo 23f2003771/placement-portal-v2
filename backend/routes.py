@@ -124,26 +124,25 @@ class AdminDashboard(Resource):
         if user.role != "admin":
             return {"message": "Admin Privlage Required!"}, 403
         
-        data = request.get_json()
+        data = request.get_json() or {}
+        action = data.get("action")
         
         target_user = User.query.filter_by(id=id).first()
         drive = PlacementDrive.query.filter_by(id=id).first()
-        if not target_user and data["action"] == "blacklist":
+        if action == "blacklist" and not target_user:
             return {"message": "User not found!"}, 404
-        elif not drive and data["action"] == "completed":
+        elif action in ["completed", "reject_drive"] and not drive:
             return {"message": "Drive not found!"}, 404
         student_profile = StudentProfile.query.filter_by(user_id=id).first()
         company_profile = CompanyProfile.query.filter_by(user_id=id).first()
 
-        if data['action'] == "completed" and drive:
-            drive.status = "completed"
-        elif data['action'] == "blacklist" and student_profile:
+        if action == "blacklist" and student_profile:
             student_profile.is_blacklisted = True
             target_user.is_active = False
             for apl in student_profile.applications:
                 apl.status = "rejected"
                 apl.remark = "Student blacklisted by admin"
-        elif data['action'] == "blacklist" and company_profile:
+        elif action == "blacklist" and company_profile:
             company_profile.is_blacklisted = True
             target_user.is_active = False
             company_profile.approval_status = "blacklisted"
@@ -152,18 +151,18 @@ class AdminDashboard(Resource):
                 for apl in drive.applications:
                     apl.status = "rejected"
                     apl.remark = "Company blacklisted by admin"
-        elif data['action'] == "approve" and company_profile:
+        elif action == "approve" and company_profile:
             company_profile.approval_status = "approved"
-        elif data['action'] == "reject" and company_profile:
+        elif action == "reject" and company_profile:
             company_profile.approval_status = "rejected"
             company_profile.is_blacklisted = True
             target_user.is_active = False
-        elif data['action'] == "reject_drive" and drive:
+        elif action == "reject_drive" and drive:
             drive.status = "rejected"
             for apl in drive.applications:
                 apl.status = "rejected"
                 apl.remark = "Drive rejected by admin"
-        elif data['action'] == "complete_drive" and drive:
+        elif action == "completed" and drive:
             drive.status = "completed"
             for apl in drive.applications:
                 if apl.status in ["applied", "shortlisted", "waitlisted"]:
@@ -173,7 +172,7 @@ class AdminDashboard(Resource):
             return {"message": "Invalid action!"}, 400
         
         db.session.commit()
-        return {"message": "User action completed successfully!"}, 200
+        return {"message": "Admin action completed successfully!"}, 200
 
 api.add_resource(AdminDashboard, '/admin/dashboard', '/admin/dashboard/<int:id>')
 
@@ -182,7 +181,7 @@ class CompanyDashboard(Resource):
     @jwt_required()
     def get(self):
         user = User.query.filter_by(email=get_jwt_identity()).first()
-        if user.role != "company" or user.company_profile.approval_status != "approved":
+        if user.role != "company" or not user.company_profile or user.company_profile.approval_status != "approved":
             return {"message": "only approved comanies allowed!"}, 403
         
         drives = PlacementDrive.query.filter_by(company_id=user.company_profile.id).all()
@@ -205,7 +204,7 @@ class CompanyDashboard(Resource):
     @jwt_required()
     def post(self):
         user = User.query.filter_by(email=get_jwt_identity()).first()
-        if user.role != "company" or user.company_profile.approval_status != "approved":
+        if user.role != "company" or not user.company_profile or user.company_profile.approval_status != "approved":
             return {"message": "only approved comanies allowed!"}, 403
         
         data = request.get_json()
@@ -224,28 +223,42 @@ class CompanyDashboard(Resource):
     @jwt_required()
     def put(self, id):
         user = User.query.filter_by(email=get_jwt_identity()).first()
-        if user.role != "company" or user.company_profile.approval_status != "approved":
+        if user.role != "company" or not user.company_profile or user.company_profile.approval_status != "approved":
             return {"message": "only approved comanies allowed!"}, 403
         
-        application = Application.query.filter_by(id=id).first()
+        data = request.get_json() or {}
+        status = data.get("status")
 
-        if not application:
-            return {"message": "Application not found!"}, 404
-        
-        if application.drive.company_id != user.company_profile.id:
-            return {"message": "Unauthorized action!"}, 403
-        
-        data = request.get_json()
+        if status == "completed":
+            drive = PlacementDrive.query.get(id=id)
 
-        if 'status' not in data or not data['status'] or data['status'] not in ['accepted', 'rejected', 'shortlisted', 'waitlisted']:
-            return {"message": "Invalid status!"}, 400
-        
-        application.status = data['status']
-        application.remark = data.get('remark', None)
+            if not drive:
+                return {"message": "Drive not found!"}, 404
+
+            if drive.company_id != user.company_profile.id:
+                return {"message": "Unauthorized action!"}, 403
+
+            drive.status = "completed"
+
+            for apl in drive.applications:
+                if apl.status in ["applied", "shortlisted", "waitlisted"]:
+                    apl.status = "rejected"
+                    apl.remark = "Drive completed by company"
+        else:
+            application = Application.query.get(id=id)
+
+            if not application:
+                return {"message": "Application not found!"}, 404
+
+            if application.drive.company_id != user.company_profile.id:
+                return {"message": "Unauthorized action!"}, 403
+
+            application.status = status
+            application.remark = data.get("remark", None)
 
         db.session.commit()
 
-        return {"message": f"Application {data['status']} successfully!"}, 200
+        return {"message": f"Status updated to {status} successfully!"}, 200
     
 api.add_resource(CompanyDashboard, '/company/dashboard', '/company/dashboard/<int:id>')
 
