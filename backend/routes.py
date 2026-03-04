@@ -99,20 +99,21 @@ class AdminDashboard(Resource):
         companies_applications = []
 
         for stu in students:
-            students_list.append({"email": stu.user.email, "full_name": stu.full_name, "branch": stu.branch, "year": stu.year, "cgpa": stu.cgpa, "phone": stu.phone, "resume_path": stu.resume_path, "is_blacklisted": stu.is_blacklisted})
+            if not stu.is_blacklisted:
+                students_list.append({"id": stu.user.id, "email": stu.user.email, "full_name": stu.full_name, "branch": stu.branch, "year": stu.year, "cgpa": stu.cgpa, "phone": stu.phone, "resume_path": stu.resume_path, "is_blacklisted": stu.is_blacklisted})
 
         for comp in companies:
             if comp.approval_status == "approved":
-                companies_list.append({"email": comp.user.email, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "approval_status": comp.approval_status, "is_blacklisted": comp.is_blacklisted})
+                companies_list.append({"id": comp.user.id, "email": comp.user.email, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "approval_status": comp.approval_status})
             elif comp.approval_status == "pending":
-                companies_applications.append({"email": comp.user.email, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "approval_status": comp.approval_status, "is_blacklisted": comp.is_blacklisted})
+                companies_applications.append({"id": comp.user.id, "email": comp.user.email, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "approval_status": comp.approval_status})
 
         for drive in drives:
             if drive.status == "ongoing":
-                ongoing_drives.append({"drive_name": drive.drive_name, "company_email": drive.company.user.email, "description": drive.description, "deadline": drive.deadline, "is_active": drive.is_active})
+                ongoing_drives.append({"id": drive.id, "drive_name": drive.drive_name, "company_email": drive.company.user.email, "job_title": drive.job_title, "description": drive.job_description, "is_active": drive.is_active, "salary": drive.salary, "location": drive.location})
         
         for apl in applications:
-            applications_list.append({"student_email": apl.student.user.email, "drive_name": apl.drive.drive_name, "applied_at": apl.applied_at, "status": apl.status, "remark": apl.remark})
+            applications_list.append({"id": apl.id, "name": apl.student.full_name, "department": apl.student.department, "company_name": apl.drive.company.company_name, "student_email": apl.student.user.email, "drive_name": apl.drive.drive_name, "applied_at": apl.applied_at, "job_title": apl.drive.job_title, "job_description": apl.drive.job_description})
             
         return {"students": students_list, "companies": companies_list, "drives": ongoing_drives, "applications": applications_list, "company_applications": companies_applications}, 200
 
@@ -127,7 +128,7 @@ class AdminDashboard(Resource):
         
         target_user = User.query.filter_by(id=id).first()
         drive = PlacementDrive.query.filter_by(id=id).first()
-        if not target_user and data["action"] in ["blacklist", "unblacklist"]:
+        if not target_user and data["action"] == "blacklist":
             return {"message": "User not found!"}, 404
         elif not drive and data["action"] == "completed":
             return {"message": "Drive not found!"}, 404
@@ -142,36 +143,37 @@ class AdminDashboard(Resource):
             for apl in student_profile.applications:
                 apl.status = "rejected"
                 apl.remark = "Student blacklisted by admin"
-        elif data['action'] == "unblacklist" and student_profile:
-            student_profile.is_blacklisted = False
-            target_user.is_active = True
-            for apl in student_profile.applications:
-                if apl.status == "rejected" and apl.remark == "Student blacklisted by admin":
-                    apl.status = "applied"
-                    apl.remark = None
         elif data['action'] == "blacklist" and company_profile:
             company_profile.is_blacklisted = True
             target_user.is_active = False
+            company_profile.approval_status = "blacklisted"
             for drive in company_profile.drives:
                 drive.status = "rejected"
                 for apl in drive.applications:
                     apl.status = "rejected"
                     apl.remark = "Company blacklisted by admin"
-        elif data['action'] == "unblacklist" and company_profile:
-            company_profile.is_blacklisted = False
-            target_user.is_active = True
-            for drive in company_profile.drives:
-                if drive.status == "rejected":
-                    drive.status = "pending"
-                    for apl in drive.applications:
-                        if apl.status == "rejected" and apl.remark == "Company blacklisted by admin":
-                            apl.status = "applied"
-                            apl.remark = None
+        elif data['action'] == "approve" and company_profile:
+            company_profile.approval_status = "approved"
+        elif data['action'] == "reject" and company_profile:
+            company_profile.approval_status = "rejected"
+            company_profile.is_blacklisted = True
+            target_user.is_active = False
+        elif data['action'] == "reject_drive" and drive:
+            drive.status = "rejected"
+            for apl in drive.applications:
+                apl.status = "rejected"
+                apl.remark = "Drive rejected by admin"
+        elif data['action'] == "complete_drive" and drive:
+            drive.status = "completed"
+            for apl in drive.applications:
+                if apl.status in ["applied", "shortlisted", "waitlisted"]:
+                    apl.status = "rejected"
+                    apl.remark = "Drive completed by admin"
         else:
             return {"message": "Invalid action!"}, 400
         
         db.session.commit()
-        return {"message": f"User {data['action']}ed successfully!"}, 200
+        return {"message": "User action completed successfully!"}, 200
 
 api.add_resource(AdminDashboard, '/admin/dashboard', '/admin/dashboard/<int:id>')
 

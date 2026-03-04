@@ -45,7 +45,6 @@
                     }
 
                     localStorage.setItem('token', data.token);
-                    console.log("FULL RESPONSE:", data);
 
                     if (data.login_data.role === 'student') {
                         this.$router.push('/student-dashboard');
@@ -56,8 +55,6 @@
                     } else {
                         throw new Error('Unknown user role');
                     }
-
-                    localStorage.setItem('token', data.token);
 
                     alert('Login successful!');
                 } catch (error) {
