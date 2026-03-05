@@ -2,6 +2,7 @@ from flask_restful import Api, Resource
 from flask import app, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_caching import Cache
+from datetime import datetime
 from models import db, User, StudentProfile, CompanyProfile, PlacementDrive, Application
 
 
@@ -165,7 +166,7 @@ class AdminDashboard(Resource):
         elif action == "completed" and drive:
             drive.status = "completed"
             for apl in drive.applications:
-                if apl.status in ["applied", "shortlisted", "waitlisted"]:
+                if apl.status != "selected":
                     apl.status = "rejected"
                     apl.remark = "Drive completed by admin"
         else:
@@ -186,7 +187,7 @@ class CompanyDashboard(Resource):
         
         drives = PlacementDrive.query.filter_by(company_id=user.company_profile.id).all()
 
-        upcoming_drives = []
+        ongoing_drives = []
         closed_drives = []
 
         for drive in drives:
@@ -194,11 +195,11 @@ class CompanyDashboard(Resource):
                 applications = []
                 for apl in drive.applications:
                     applications.append({"id": apl.id, "student_email": apl.student.user.email, "full_name": apl.student.full_name, "branch": apl.student.branch, "year": apl.student.year, "cgpa": apl.student.cgpa, "phone": apl.student.phone, "resume_path": apl.student.resume_path, "status": apl.status})
-                upcoming_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.description, "deadline": drive.application_deadline, "applications": applications})
+                ongoing_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "deadline": drive.application_deadline.isoformat(), "applications": applications})
             elif drive.status == "completed":
-                closed_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.description, "deadline": drive.application_deadline})
+                closed_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "deadline": drive.application_deadline.isoformat()})
         
-        return {"upcoming_drives": upcoming_drives, "closed_drives": closed_drives}, 200
+        return {"ongoing_drives": ongoing_drives, "closed_drives": closed_drives}, 200
     
     
     @jwt_required()
@@ -212,7 +213,9 @@ class CompanyDashboard(Resource):
         if not data or 'drive_name' not in data or 'job_title' not in data or 'description' not in data or 'application_deadline' not in data or 'eligiblility_criteria' not in data or 'interview_type' not in data or not data['drive_name'] or not data['job_title'] or not data['description'] or not data['application_deadline'] or not data['eligiblility_criteria'] or not data['interview_type']:
             return {'message': "Incomplete Data!"}, 400
         
-        new_drive = PlacementDrive(company_id=user.company_profile.id, drive_name=data['drive_name'], job_title=data['job_title'], description=data['description'], application_deadline=data['application_deadline'], eligiblility_criteria=data['eligiblility_criteria'], interview_type=data['interview_type'])
+        deadline = datetime.strptime(data['application_deadline'], "%Y-%m-%d")
+        
+        new_drive = PlacementDrive(company_id=user.company_profile.id, drive_name=data['drive_name'], job_title=data['job_title'], job_description=data['description'], application_deadline=deadline, eligiblility_criteria=data['eligiblility_criteria'], interview_type=data['interview_type'])
         
         db.session.add(new_drive)
         db.session.commit()
@@ -230,7 +233,7 @@ class CompanyDashboard(Resource):
         status = data.get("status")
 
         if status == "completed":
-            drive = PlacementDrive.query.get(id=id)
+            drive = PlacementDrive.query.get(id)
 
             if not drive:
                 return {"message": "Drive not found!"}, 404
@@ -241,11 +244,11 @@ class CompanyDashboard(Resource):
             drive.status = "completed"
 
             for apl in drive.applications:
-                if apl.status in ["applied", "shortlisted", "waitlisted"]:
+                if apl.status != "selected":
                     apl.status = "rejected"
                     apl.remark = "Drive completed by company"
         else:
-            application = Application.query.get(id=id)
+            application = Application.query.get(id)
 
             if not application:
                 return {"message": "Application not found!"}, 404
