@@ -51,7 +51,7 @@
                     <p><strong>Description:</strong> {{ selectedDrive.description }}</p>
                     <p><strong>Salary:</strong> {{ selectedDrive.salary }}</p>
                     <p><strong>Location:</strong> {{ selectedDrive.location }}</p>
-                    <button @click="closeDetails">Close</button>
+                    <button @click="closeDetails">Back</button>
             </div>
         </section>
         <section>
@@ -80,7 +80,7 @@
                 </tr>
                 </tbody>
             </table>
-            <div v-if="showApplicationDetails" class="popup" @click="closeApplicationDetails">
+            <div v-if="showApplicationDetails" class="popup">
                     <h3>Student Application</h3>
                     <p><strong>Student Name:</strong> {{ selectedApplication.name }}</p>
                     <p><strong>Department:</strong> {{ selectedApplication.department }}</p>    
@@ -89,7 +89,7 @@
                     <p><strong>Date Applied:</strong> {{ selectedApplication.applied_at }}</p>
                     <p><strong>Status:</strong> {{ selectedApplication.status }}</p>
                     <p><strong>Remark:</strong> {{ selectedApplication.remark }}</p>
-                    <button @click="closeApplicationDetails">Close</button>
+                    <button @click="closeApplicationDetails">Back</button>
             </div>
         </section>
     </div>
@@ -111,7 +111,10 @@
             };
         },
         async mounted() {
-            try {
+            this.fetchDashboardData();
+        }, methods: {
+            async fetchDashboardData() {
+                try {
                 const token = localStorage.getItem('token');
                 if (!token) {
                     this.$router.push('/login');
@@ -135,18 +138,19 @@
                 this.applications = data.applications;
                 this.ongoing_drives = data.drives;
                 this.company_applications = data.company_applications;
-            } catch (error) {
+
+                } catch (error) {
                 console.error('Error fetching dashboard data:', error);
-            }
-        }, methods: {
+                }
+            },
             async blacklistCompany(companyId) {
                 const token = localStorage.getItem('token');
                 if (!token) {
                     this.$router.push('/login');
                     return;
-                }
+                    }
 
-                 try {
+                try {
                     const response = await fetch(`http://localhost:5000/admin/dashboard/${companyId}`, {
                         method: 'PUT',
                         headers: {
@@ -160,6 +164,7 @@
                         throw new Error('Failed to blacklist company');
                     }
 
+                    this.fetchDashboardData();
                     alert('Company blacklisted successfully!');
                 } catch (error) {
                     alert('Error blacklisting company: ' + error.message);
@@ -186,6 +191,7 @@
                         throw new Error('Failed to blacklist student');
                     }
 
+                    this.fetchDashboardData();
                     alert('Student blacklisted successfully!');
                 } catch (error) {
                     alert('Error blacklisting student: ' + error.message);
@@ -212,6 +218,7 @@
                         throw new Error('Failed to approve company application');
                     }
 
+                    this.fetchDashboardData();
                     alert('Company application approved successfully!');
                 } catch (error) {
                     alert('Error approving company application: ' + error.message);
@@ -238,6 +245,7 @@
                         throw new Error('Failed to reject company application');
                     }
 
+                    this.fetchDashboardData();
                     alert('Company application rejected successfully!');
                 } catch (error) {
                     alert('Error rejecting company application: ' + error.message);
@@ -265,13 +273,14 @@
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ action: "complete_drive" })
+                        body: JSON.stringify({ action: "completed" })
                     });
 
                     if (!response.ok) {
                         throw new Error('Failed to complete drive');
                     }
 
+                    this.fetchDashboardData();
                     alert('Drive marked as completed successfully!');
                 } catch (error) {
                     alert('Error completing drive: ' + error.message);
@@ -298,6 +307,7 @@
                         throw new Error('Failed to reject drive');
                     }
 
+                    this.fetchDashboardData();
                     alert('Drive rejected successfully!');
                 } catch (error) {
                     alert('Error rejecting drive: ' + error.message);
@@ -311,6 +321,10 @@
             async closeApplicationDetails() {
                 this.showApplicationDetails = false;
                 this.selectedApplication = null;
+            },
+            async logout() {
+                localStorage.removeItem("token");
+                this.$router.push("/login");
             }
         }
     };

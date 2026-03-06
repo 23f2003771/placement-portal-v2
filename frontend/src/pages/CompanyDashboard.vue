@@ -80,7 +80,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <button @click="closeApplications">Close Applications View</button>
+                <button @click="closeApplications">Back</button>
             </div>
 
             <div v-if="showDetails">
@@ -105,7 +105,7 @@
                     <label for="interview">Interview</label>
                     <button @click="changeApplicationStatus(selectedApplication.id, updated_status, remark)">Update Status</button>
                 </div>
-                <button @click="closeDetails">Close Details View</button>
+                <button @click="closeDetails">Back</button>
             </div>
         </section>
     </div>
@@ -125,7 +125,7 @@ export default {
             application_deadline: "",
             interview_type: "",
             remark: "",
-            updated_status: "waitlisted",
+            updated_status: "applied",
             selectedApplication: null,
             showDetails: false,
             selectedDrive: null,
@@ -133,31 +133,33 @@ export default {
         };
     },
     async mounted() {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                this.$router.push("/login");
-                return;
-            }
-
-            const response = await fetch("http://localhost:5000/company/dashboard", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-
-            const data = await response.json();
-
-            this.ongoing_drives = data.ongoing_drives;
-            this.closed_drives = data.closed_drives;
-        } catch (error) {
-            console.error("Error fetching dashboard data:", error);
-        }
+        this.fetchDashboardData();
     },
     methods: {
+        async fetchDashboardData() {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    this.$router.push("/login");
+                    return;
+                }
+
+                const response = await fetch("http://localhost:5000/company/dashboard", {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                this.ongoing_drives = data.ongoing_drives;
+                this.closed_drives = data.closed_drives;
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            }
+        },
         async createDrive() {
-            console.log("createDrive triggered");
             try {
                 const token = localStorage.getItem("token");
                 if (!token) {
@@ -185,6 +187,7 @@ export default {
                     throw new Error("Failed to create new drive");
                 }
 
+                this.fetchDashboardData();
                 alert("Drive created successfully!");
             } catch (error) {
                 alert("Failed to create new drive " + error.message);
@@ -216,6 +219,7 @@ export default {
                     throw new Error("Failed to update drive status");
                 }
 
+                this.fetchDashboardData();
                 alert("Drive status updated successfully!");
             } catch (error) {
                 alert("Failed to update drive status " + error.message);
@@ -230,7 +234,7 @@ export default {
                 }
 
                 const response = await fetch(
-                    `http://localhost:5000/company/application/${applicationId}`,
+                    `http://localhost:5000/company/dashboard/${applicationId}`,
                     {
                         method: "PUT",
                         headers: {
@@ -248,6 +252,7 @@ export default {
                     throw new Error("Failed to update application status");
                 }
 
+                this.fetchDashboardData();
                 alert("Application status updated successfully!");
             } catch (error) {
                 alert("Failed to update application status " + error.message);
@@ -268,6 +273,10 @@ export default {
         closeApplications() {
             this.showApplications = false;
             this.selectedDrive = null;
+        },
+        async logout() {
+            localStorage.removeItem("token");
+            this.$router.push("/login");
         }
     }
 };

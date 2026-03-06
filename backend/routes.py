@@ -1,3 +1,5 @@
+from email.mime import application
+
 from flask_restful import Api, Resource
 from flask import app, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -111,10 +113,10 @@ class AdminDashboard(Resource):
 
         for drive in drives:
             if drive.status == "ongoing":
-                ongoing_drives.append({"id": drive.id, "drive_name": drive.drive_name, "company_email": drive.company.user.email, "job_title": drive.job_title, "description": drive.job_description, "is_active": drive.is_active, "salary": drive.salary, "location": drive.location})
+                ongoing_drives.append({"id": drive.id, "drive_name": drive.drive_name, "company_email": drive.company.user.email, "job_title": drive.job_title, "description": drive.job_description, "salary": drive.salary, "location": drive.location})
         
         for apl in applications:
-            applications_list.append({"id": apl.id, "name": apl.student.full_name, "department": apl.student.department, "company_name": apl.drive.company.company_name, "student_email": apl.student.user.email, "drive_name": apl.drive.drive_name, "applied_at": apl.applied_at, "job_title": apl.drive.job_title, "job_description": apl.drive.job_description})
+            applications_list.append({"id": apl.id, "name": apl.student.full_name, "department": apl.student.branch, "company_name": apl.drive.company.company_name, "student_email": apl.student.user.email, "drive_name": apl.drive.drive_name, "applied_at": apl.applied_at.isoformat(), "job_title": apl.drive.job_title, "job_description": apl.drive.job_description, "status": apl.status, "remark": apl.remark})
             
         return {"students": students_list, "companies": companies_list, "drives": ongoing_drives, "applications": applications_list, "company_applications": companies_applications}, 200
 
@@ -278,16 +280,23 @@ class StudentDashboard(Resource):
 
         applied_drives = []
         for apl in applications:
-            applied_drives.append({"drive_name": apl.drive.drive_name, "company_name": apl.drive.company.company_name, "job_title": apl.drive.job_title, "description": apl.drive.description, "application_deadline": apl.drive.application_deadline, "status": apl.status, "remark": apl.remark})
+            if apl.status not in ["rejected", "selected"]:
+                applied_drives.append({"id": apl.id, "drive_name": apl.drive.drive_name, "company_name": apl.drive.company.company_name, "job_title": apl.drive.job_title, "description": apl.drive.job_description, "application_deadline": apl.drive.application_deadline.isoformat(), "status": apl.status, "remark": apl.remark})
         
         organizations = []
         for comp in companies:
             drives = []
             for drive in comp.drives:
-                drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.description, "application_deadline": drive.application_deadline, "eligiblility_criteria": drive.eligiblility_criteria, "interview_type": drive.interview_type})
-            organizations.append({"company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "drives": drives})
+                if drive.status == "ongoing":
+                    drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "application_deadline": drive.application_deadline.isoformat(), "eligiblility_criteria": drive.eligiblility_criteria, "interview_type": drive.interview_type})
+            organizations.append({"id": comp.id, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "drives": drives})
         
-        return {"applied_drives": applied_drives, "organizations": organizations}, 200
+        history = []
+        for apl in applications:
+            if apl.status in ["rejected", "selected"]:
+                history.append({"id": apl.id, "drive_name": apl.drive.drive_name, "company_name": apl.drive.company.company_name, "job_title": apl.drive.job_title, "description": apl.drive.job_description, "interview_type": apl.drive.interview_type, "status": apl.status, "remark": apl.remark})
+
+        return {"applied_drives": applied_drives, "organizations": organizations, "history": history}, 200
     
 
     @jwt_required()
