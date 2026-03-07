@@ -85,6 +85,7 @@ api.add_resource(UserLogin, '/login')
 class AdminDashboard(Resource):
 
     @jwt_required()
+    @cache.cached(timeout=120, key_prefix="admin_dashboard")
     def get(self):
         user = User.query.filter_by(email=get_jwt_identity()).first()
         if user.role != "admin":
@@ -175,13 +176,16 @@ class AdminDashboard(Resource):
             return {"message": "Invalid action!"}, 400
         
         db.session.commit()
+        cache.delete("admin_dashboard")
         return {"message": "Admin action completed successfully!"}, 200
 
 api.add_resource(AdminDashboard, '/admin/dashboard', '/admin/dashboard/<int:id>')
 
 
 class CompanyDashboard(Resource):
+
     @jwt_required()
+    @cache.cached(timeout=120, key_prefix="company_dashboard")
     def get(self):
         user = User.query.filter_by(email=get_jwt_identity()).first()
         if user.role != "company" or not user.company_profile or user.company_profile.approval_status != "approved":
@@ -221,6 +225,7 @@ class CompanyDashboard(Resource):
         
         db.session.add(new_drive)
         db.session.commit()
+        cache.delete("company_dashboard")
 
         return {"message": "Placement Drive Created Successfully!"}, 201
     
@@ -262,6 +267,7 @@ class CompanyDashboard(Resource):
             application.remark = data.get("remark", None)
 
         db.session.commit()
+        cache.delete("company_dashboard")
 
         return {"message": f"Status updated to {status} successfully!"}, 200
     
@@ -269,7 +275,9 @@ api.add_resource(CompanyDashboard, '/company/dashboard', '/company/dashboard/<in
 
 
 class StudentDashboard(Resource):
+
     @jwt_required()
+    @cache.cached(timeout=120, key_prefix="student_dashboard")
     def get(self):
         user = User.query.filter_by(email=get_jwt_identity()).first()
         if user.role != "student":
@@ -321,6 +329,7 @@ class StudentDashboard(Resource):
         
         db.session.add(new_application)
         db.session.commit()
+        cache.delete("student_dashboard")
 
         return {"message": "Applied to drive successfully!"}, 201
     

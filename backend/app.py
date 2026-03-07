@@ -14,11 +14,18 @@ app = create_app()
 app.config['JWT_SECRET_KEY'] = "super-secret"
 jwt = JWTManager(app)
 
-from routes import api
+from routes import api, cache
 api.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db.init_app(app)
+
+app.config['CACHE_TYPE'] = 'RedisCache'
+app.config['CACHE_REDIS_HOST'] = 'localhost'
+app.config['CACHE_REDIS_PORT'] = 6379
+app.config['CACHE_REDIS_DB'] = 0
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300
+cache.init_app(app)
 
 
 if __name__ == "__main__":
