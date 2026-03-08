@@ -1,9 +1,24 @@
 <template>
-    <div class="student-dashboard">
-        <section class="company-list">
-            <h2>Available Companies and Drives</h2>
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-semibold" href="#">Placement Portal - Student Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                    <a class="nav-link text-danger" style="cursor:pointer;" @click="logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4 mb-5">
+        <section class="card shadow-sm p-3 mb-4">
+            <h4 class="mb-3 border-bottom pb-2">Available Companies and Drives</h4>
             <div v-for="company in organizations" :key="company.id" class="company-card">
-                <table>
+                <table class="table table-bordered table-striped table-hover mt-3">
                     <thead>
                         <tr>
                             <th>Company Name</th>
@@ -13,16 +28,16 @@
                     <tbody>
                         <tr>
                             <td>{{ company.company_name }}</td>
-                            <td><button @click="viewdrives(company)">View Drives</button></td>
+                            <td><button class="btn btn-sm btn-primary" @click="viewdrives(company)">View Drives</button></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div v-if="showDrives" class="drive-list">
+            <div v-if="showDrives" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1000; width:400px;">
                 <h3>Drives for {{ selectedCompany.company_name }}</h3>
                 <h4>Overview</h4>
                 <p>{{ selectedCompany.description }}</p>
-                <table>
+                <table class="table table-sm table-bordered">
                     <thead>
                         <tr>
                             <th>Drive Name</th>
@@ -32,26 +47,26 @@
                     <tbody>
                         <tr v-for="drive in selectedCompany.drives" :key="drive.id">
                             <td>{{ drive.drive_name }}</td>
-                            <td><button @click="viewDetails(drive)">View Details</button></td>
+                            <td><button class="btn btn-sm btn-outline-primary" @click="viewDetails(drive)">View Details</button></td>
                         </tr>
                     </tbody>
                 </table>
-                <button @click="selectedCompany = null; showDrives = false">Back</button>
+                <button class="btn btn-secondary mt-2" @click="selectedCompany = null; showDrives = false">Back</button>
             </div>
-            <div v-if="showDetails" class="drive-details">
+            <div v-if="showDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:450px;">
                 <h3>{{ selectedDrive.drive_name }}</h3>
                 <p><strong>Job Title:</strong> {{ selectedDrive.job_title }}</p>
                 <p><strong>Description:</strong> {{ selectedDrive.description }}</p>
                 <p><strong>Application Deadline:</strong> {{ selectedDrive.application_deadline }}</p>
                 <p><strong>Eligibility Criteria:</strong> {{ selectedDrive.eligiblility_criteria }}</p>
                 <p><strong>Interview Type:</strong> {{ selectedDrive.interview_type }}</p>
-                <button @click="applyToDrive(selectedDrive.id)">Apply to Drive</button>
-                <button @click="selectedDrive = null; showDetails = false">Back</button>
+                <button class="btn btn-success btn-sm me-2" @click="applyToDrive(selectedDrive.id)">Apply to Drive</button>
+                <button class="btn btn-secondary mt-2" @click="selectedDrive = null; showDetails = false">Back</button>
             </div>
         </section>
-                <section>
-            <h2>Applied Drives</h2>
-            <table>
+            <section class="card shadow-sm p-3 mb-4">
+            <h4 class="mb-3 border-bottom pb-2">Applied Drives</h4>
+            <table class="table table-bordered table-striped table-hover mt-3">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -62,31 +77,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                <tr v-for="drive in applied_drives" :key="drive.id", class="row">
+                <tr v-for="drive in applied_drives" :key="drive.id">
                     <td>{{ drive.id }}</td>
                     <td>{{ drive.drive_name }}</td>
                     <td>{{ drive.company_name }}</td>
                     <td>{{ drive.application_deadline }}</td>
                     <td>
-                        <button @click="viewDriveDetails(drive)">View Details</button>
+                        <button class="btn btn-sm btn-outline-primary" @click="viewDriveDetails(drive)">View Details</button>
                     </td>
                 </tr>
                 </tbody>
             </table>
-            <div v-if="showAppliedDetails" class="drive-details">
-                <h3>{{ selectedAppliedDrive.drive_name }}</h3>
+            <div v-if="showAppliedDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:450px;">
+                <h4 class="mb-3 border-bottom pb-2">{{ selectedAppliedDrive.drive_name }}</h4>
                 <p><strong>Company Name:</strong> {{ selectedAppliedDrive.company_name }}</p>
                 <p><strong>Job Title:</strong> {{ selectedAppliedDrive.job_title }}</p>
                 <p><strong>Description:</strong> {{ selectedAppliedDrive.description }}</p>
                 <p><strong>Application Deadline:</strong> {{ selectedAppliedDrive.application_deadline }}</p>
                 <p><strong>Status:</strong> {{ selectedAppliedDrive.status }}</p>
                 <p><strong>Remark:</strong> {{ selectedAppliedDrive.remark }}</p>
-                <button @click="selectedAppliedDrive = null; showAppliedDetails = false">Back</button>
+                <button class="btn btn-secondary mt-2" @click="selectedAppliedDrive = null; showAppliedDetails = false">Back</button>
             </div>
         </section>
-        <section>
-            <h2>Student Application History</h2>
-            <table>
+        <section class="card shadow-sm p-3 mb-4">
+            <h4 class="mb-3 border-bottom pb-2">Student Application History</h4>
+            <table class="table table-bordered table-striped table-hover mt-3">
                 <thead>
                     <tr>
                         <th>Drive Id</th>
@@ -97,7 +112,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                <tr v-for="history in history" :key="history.id", class="row">
+                <tr v-for="history in history" :key="history.id">
                     <td>{{ history.id }}</td>
                     <td>{{ history.interview_type }}</td>
                     <td>{{ history.job_title }}</td>
@@ -107,8 +122,8 @@
                 </tbody>
             </table>
         </section>
-        <section class="export-csv">
-            <button @click="exportCSV">Export Data as CSV</button>
+        <section class="text-center mt-4">
+            <button class="btn btn-outline-success" @click="exportCSV">Export Data as CSV</button>
         </section>
     </div>
 </template>

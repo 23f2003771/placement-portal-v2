@@ -1,70 +1,73 @@
 <template>
-    <div class="register">
-        <h1>Register for the Placement Portal</h1>
-        <p>Please fill in the form below to create an account.</p>
-        <form>
+    <div class="container py-5 d-flex justify-content-center">
+        <div class="card shadow p-4" style="width: 500px;">
+        <h3 class="text-center mb-3">Placement Portal Registration</h3>
+        <p class="text-center text-muted mb-4">Please fill in the form below to create an account.</p>
+        <form class="d-grid gap-3">
             <div>
-                <label for="email">Email:</label>
-                <input v-model="email" type="email" id="email" required />
+                <label class="form-label" for="email">Email</label>
+                <input v-model="email" class="form-control" type="email" id="email" required />
             </div>
             <div>
-                <label for="password">Password:</label>
-                <input v-model="password" type="password" id="password" required />
+                <label class="form-label" for="password">Password</label>
+                <input v-model="password" class="form-control" type="password" id="password" required />
             </div>
             <div>
-                <label for="role">Role:</label>
-                <select v-model="role" id="role" required>
+                <label class="form-label" for="role">Role</label>
+                <select v-model="role" class="form-select" id="role" required>
                     <option value="">Select Role</option>
                     <option value="student">Student</option>
                     <option value="company">Company</option>
                 </select>
             </div>
-            <div v-if="role === 'student'" class="student-fields">
+            <div v-if="role === 'student'" class="border rounded p-3 mt-2">
                 <div>
-                    <label for="full_name">Full Name:</label>
-                    <input v-model="full_name" type="text" id="full_name" required />
+                    <label class="form-label" for="full_name">Full Name:</label>
+                    <input v-model="full_name" class="form-control" type="text" id="full_name" required />
                 </div>
                 <div>
-                    <label for="branch">Branch:</label>
-                    <input v-model="branch" type="text" id="branch" required />
+                    <label class="form-label" for="branch">Branch:</label>
+                    <input v-model="branch" class="form-control" type="text" id="branch" required />
                 </div>
                 <div>
-                    <label for="cgpa">CGPA:</label>
-                    <input v-model="cgpa" type="number" step="0.01" id="cgpa" required />
+                    <label class="form-label" for="cgpa">CGPA:</label>
+                    <input v-model="cgpa" class="form-control" type="number" step="0.01" id="cgpa" required />
                 </div>
                 <div>
-                    <label for="year">Year:</label>
-                    <input v-model="year" type="number" id="year" required />
+                    <label class="form-label" for="year">Year:</label>
+                    <input v-model="year" class="form-control" type="number" id="year" required />
                 </div>
                 <div>
-                    <label for="phone">Phone Number:</label>
-                    <input v-model="phone" type="tel" id="phone" required />
+                    <label class="form-label" for="phone">Phone Number:</label>
+                    <input v-model="phone" class="form-control" type="tel" id="phone" required />
                 </div>
                 <div>
-                    <label for="resume_path">Resume Path:</label>
-                    <input v-model="resume_path" type="text" id="resume_path" required />
-                </div>
-            </div>
-            <div v-else-if="role === 'company'" class="company-fields">
-                <div>
-                    <label for="company_name">Company Name:</label>
-                    <input v-model="company_name" type="text" id="company_name" required />
-                </div>
-                <div>
-                    <label for="hr_contact">HR Contact:</label>
-                    <input v-model="hr_contact" type="text" id="hr_contact" required />
-                </div>
-                <div>
-                    <label for="website">Website:</label>
-                    <input v-model="website" type="url" id="website" required />
-                </div>
-                <div>
-                    <label for="description">Description:</label>
-                    <textarea v-model="description" id="description" required></textarea>
+                    <label class="form-label" for="resume_path">Resume Path:</label>
+                    <input v-model="resume_path" class="form-control" type="text" id="resume_path" required />
                 </div>
             </div>
-            <button type="button" @click="register">Register</button>
+            <div v-else-if="role === 'company'" class="border rounded p-3 mt-2">
+                <div>
+                    <label class="form-label" for="company_name">Company Name:</label>
+                    <input v-model="company_name" class="form-control" type="text" id="company_name" required />
+                </div>
+                <div>
+                    <label class="form-label" for="hr_contact">HR Contact:</label>
+                    <input v-model="hr_contact" class="form-control" type="text" id="hr_contact" required />
+                </div>
+                <div>
+                    <label class="form-label" for="website">Website:</label>
+                    <input v-model="website" class="form-control" type="url" id="website" required />
+                </div>
+                <div>
+                    <label class="form-label" for="description">Description:</label>
+                    <textarea v-model="description" class="form-control" id="description" rows="3" required></textarea>
+                </div>
+            </div>
+            <button class="btn btn-success w-100 mt-3" type="button" @click="register">Register</button>
         </form>
+        <button class="btn btn-outline-secondary w-100 mt-2" @click="$router.push('/login')">Already have an account? Login</button>
+        </div>
     </div>
 </template>
 

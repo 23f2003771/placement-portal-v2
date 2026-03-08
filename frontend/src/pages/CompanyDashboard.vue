@@ -1,25 +1,55 @@
 <template>
-    <div class="company-dashboard">
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-semibold" href="#">Placement Portal - Company Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                    <a class="nav-link text-danger" style="cursor:pointer;" @click="logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4 mb-5">
+        <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-semibold" href="#">Placement Portal - Company Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" style="cursor:pointer;" @click="logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        </nav>
         <div class="first-row">
-        <section class="create-drive">
-            <h2>Create New Placement Drive</h2>
-            <form>
-                <input v-model="drive_name" placeholder="Drive Name" required />
-                <input v-model="job_title" placeholder="Job Title" required />
-                <textarea v-model="job_description" placeholder="Job Description" required></textarea>
-                <input v-model="eligiblility_criteria" placeholder="Eligibility Criteria" required />
-                <input v-model="application_deadline" type="date" placeholder="Application Deadline" required />
-                <select v-model="interview_type" required>
+        <section class="card shadow-sm p-3 mb-4">
+            <h4 class="mb-3 border-bottom pb-2">Create New Placement Drive</h4>
+            <form class="d-grid gap-2">
+                <input class="form-control" v-model="drive_name" placeholder="Drive Name" required />
+                <input class="form-control" v-model="job_title" placeholder="Job Title" required />
+                <textarea class="form-control" v-model="job_description" placeholder="Job Description" required></textarea>
+                <input class="form-control" v-model="eligiblility_criteria" placeholder="Eligibility Criteria" required />
+                <input class="form-control" v-model="application_deadline" type="date" placeholder="Application Deadline" required />
+                <select class="form-select" v-model="interview_type" required>
                     <option value="" disabled>Select Interview Type</option>
                     <option value="online">Online</option>
                     <option value="offline">Offline</option>
                 </select>
-                <button type="button" @click="createDrive">Create Drive</button>
+                <button class="btn btn-success mt-2" type="button" @click="createDrive">Create Drive</button>
             </form>
         </section>
-        <section class="ongoing-drives">
-            <h2>Ongoing Placement Drives</h2>
-            <table>
+        <section class="card shadow-sm p-3 mb-4">
+            <h4 class="mb-3 border-bottom pb-2">Ongoing Placement Drives</h4>
+            <table class="table table-bordered table-striped table-hover mt-3">
                 <thead>
                     <tr>
                         <th>Sr No.</th>
@@ -32,17 +62,17 @@
                         <td>{{ drive.id }}</td>
                         <td>{{ drive.drive_name }}</td>
                         <td>
-                            <button @click="viewApplications(drive)">View Applications</button>
-                            <button @click="markDriveCompleted(drive.id)">Mark Completed</button>
+                            <button class="btn btn-sm btn-primary me-2" @click="viewApplications(drive)">View Applications</button>
+                            <button class="btn btn-sm btn-success" @click="markDriveCompleted(drive.id)">Mark Completed</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </section>
         </div>
-        <section class="closed-drives">
-            <h2>Closed Placement Drives</h2>
-            <table>
+        <section class="card shadow-sm p-3 mb-4">
+            <h4 class="mb-3 border-bottom pb-2">Closed Placement Drives</h4>
+            <table class="table table-bordered table-striped table-hover mt-3">
                 <thead>
                     <tr>
                         <th>Sr No.</th>
@@ -58,9 +88,9 @@
             </table>
         </section>
         <section>
-            <div v-if="showApplications">
+            <div v-if="showApplications" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:600px;">
                 <h3>Applications for {{ selectedDrive.drive_name }}</h3>
-                <table>
+                <table class="table table-bordered table-striped table-hover mt-3">
                     <thead>
                         <tr>
                             <th>Application ID</th>
@@ -75,15 +105,15 @@
                             <td>{{ application.student_name }}</td>
                             <td>{{ application.status }}</td>
                             <td>
-                                <button @click="viewDetails(application)">View Details</button>
+                                <button class="btn btn-sm btn-outline-primary" @click="viewDetails(application)">View Details</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <button @click="closeApplications">Back</button>
+                <button class="btn btn-secondary mt-2" @click="closeApplications">Back</button>
             </div>
 
-            <div v-if="showDetails">
+            <div v-if="showDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:600px;">
                 <h3>Application Details for {{ selectedApplication.full_name }}</h3>
                 <p><strong>Application ID:</strong> {{ selectedApplication.id }}</p>
                 <p><strong>Branch Name:</strong> {{ selectedApplication.branch }}</p>
@@ -103,13 +133,13 @@
                     <label for="shortlist">Shortlist</label>
                     <input type="radio" id="interview" value="interview" v-model="updated_status">
                     <label for="interview">Interview</label>
-                    <button @click="changeApplicationStatus(selectedApplication.id, updated_status, remark)">Update Status</button>
+                    <button class="btn btn-primary btn-sm mt-2" @click="changeApplicationStatus(selectedApplication.id, updated_status, remark)">Update Status</button>
                 </div>
-                <button @click="closeDetails">Back</button>
+                <button class="btn btn-secondary mt-2" @click="closeDetails">Back</button>
             </div>
         </section>
-        <section class="export-csv">
-            <button @click="exportCSV">Export Data as CSV</button>
+        <section class="text-center mt-4">
+            <button class="btn btn-outline-success" @click="exportCSV">Export Data as CSV</button>
         </section>
     </div>
 </template>

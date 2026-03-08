@@ -77,7 +77,7 @@ class UserLogin(Resource):
         elif user.role == "company":
             login_data = {"id": user.id, "name": user.company_profile.company_name, "email": user.email, "role": user.role, "is_active": user.is_active}
         elif user.role == "admin":
-            login_data = {"email": user.email, "role": user.role}
+            login_data = {"email": user.email, "role": user.role, "name": "Admin"}
         else:
             return {'message': 'invalid user role!'}, 400
         

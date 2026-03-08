@@ -1,30 +1,63 @@
 <template>
-    <div class="admin-dashboard">
-        <section>
-            <h2>Registered Companies</h2>
-                <div v-for="company in companies" :key="company.id", class="row">
-                    <span>{{ company.company_name }}</span>
-                    <button @click="blacklistCompany(company.id)">Blacklist</button>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-semibold" href="#">Placement Portal - Admin Dashboard</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+            <form class="d-flex me-3" role="search" @submit.prevent>
+                <input class="form-control me-2" type="search" placeholder="Search" v-model="searchQuery" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            <ul class="navbar-nav mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link text-danger" style="cursor:pointer;" @click="logout">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    </nav>
+    <div class="container mt-5">
+    <div class="container mt-4 shadow-sm p-3 bg-light rounded" v-if="searchQuery.trim().length > 0">
+    <ul class="list-group">
+        <li v-for="company in filteredCompanies" :key="'c-' + company.id" class="list-group-item">
+        {{ company.company_name }} - {{ company.email }} - {{ company.website }} - {{ company.approval_status }}</li>
+        <li v-for="student in filteredStudents" :key="'s-' + student.id" class="list-group-item">
+        {{ student.full_name }} - {{ student.email }} - {{ student.branch }} - {{ student.cgpa }} - {{ student.is_blacklisted }}</li>
+        <li v-for="application in filteredCompanyApplications" :key="'ca-' + application.id" class="list-group-item">
+        {{ application.company_name }} - {{ application.status }}</li>
+        <li v-for="drive in filteredDrives" :key="'d-' + drive.id" class="list-group-item">
+        {{ drive.drive_name }} - {{ drive.description }} - {{ drive.job_title }} - {{ drive.salary }} - {{ drive.location }}</li>
+        <li v-for="application in filteredApplications" :key="'a-' + application.id" class="list-group-item">
+        {{ application.name }} - {{ application.company_name }} - {{ application.drive_name }}</li>
+    </ul>
+    </div>
+        <section class="card p-3 mb-4 shadow-sm">
+            <h4 class="border-bottom pb-2 mb-3">Registered Companies</h4>
+                <div v-for="company in companies" :key="company.id" class="row align-items-center border rounded p-2 mb-2">
+                    <span class="col">{{ company.company_name }}</span>
+                    <button class="btn btn-sm btn-danger col-auto" @click="blacklistCompany(company.id)">Blacklist</button>
                 </div>
         </section>
-        <section>
-            <h2>Registered Students</h2>
-                <div v-for="student in students" :key="student.id", class="row">
-                    <span>{{ student.full_name }}</span>
-                    <button @click="blacklistStudent(student.id)">Blacklist</button>
+        <section class="card p-3 mb-4 shadow-sm">
+            <h4 class="border-bottom pb-2 mb-3">Registered Students</h4>
+                <div v-for="student in students" :key="student.id" class="row align-items-center border rounded p-2 mb-2">
+                    <span class="col">{{ student.full_name }}</span>
+                    <button class="btn btn-sm btn-danger col-auto" @click="blacklistStudent(student.id)">Blacklist</button>
                 </div>
         </section>
-        <section>
-            <h2>Company Applications</h2>
-                <div v-for="application in company_applications" :key="application.id", class="row">
-                    <span>{{ application.company_name }}</span>
-                    <button  @click="approveCompany(application.id)">Approve</button>
-                    <button @click="rejectCompany(application.id)">Reject</button>
+        <section class="card p-3 mb-4 shadow-sm">
+            <h4 class="border-bottom pb-2 mb-3">Company Applications</h4>
+                <div v-for="application in company_applications" :key="application.id" class="row align-items-center border rounded p-2 mb-2">
+                    <span class="col">{{ application.company_name }}</span>
+                    <button class="btn btn-sm btn-success me-2 col-auto" @click="approveCompany(application.id)">Approve</button>
+                    <button class="btn btn-sm btn-danger col-auto" @click="rejectCompany(application.id)">Reject</button>
                 </div>
         </section>
-        <section>
-            <h2>Ongoing Drives</h2>
-            <table>
+        <section class="card p-3 mb-4 shadow-sm">
+            <h4 class="border-bottom pb-2 mb-3">Ongoing Drives</h4>
+            <table class="table table-bordered table-striped mt-3">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -33,30 +66,32 @@
                     </tr> 
                 </thead>
                 <tbody> 
-                <tr v-for="drive in ongoing_drives" :key="drive.id", class="row">
+                <tr v-for="drive in ongoing_drives" :key="drive.id">
                     <td>{{ drive.id }}</td>
                     <td>{{ drive.drive_name }}</td>
                     <td>
-                        <button @click="viewDrive(drive)">View Details</button>
-                        <button @click="completeDrive(drive.id)">Mark as Completed</button>
-                        <button @click="rejectDrive(drive.id)">Reject Drive</button>
+                        <button class="btn btn-sm btn-primary me-2" @click="viewDrive(drive)">View Details</button>
+                        <button class="btn btn-sm btn-success me-2" @click="completeDrive(drive.id)">Mark as Completed</button>
+                        <button class="btn btn-sm btn-danger" @click="rejectDrive(drive.id)">Reject Drive</button>
                     </td>
                 </tr>
                 </tbody>
             </table>
-            <div v-if="showDetails" class="popup" @click="closeDetails">
+            <div v-if="showDetails" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50">
+            <div v-if="showDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:400px;">
                     <h3>{{ selectedDrive.drive_name }}</h3>
                     <p><strong>Job Title:</strong> {{ selectedDrive.job_title }}</p>
                     <p><strong>Company Email:</strong> {{ selectedDrive.company_email }}</p>
                     <p><strong>Description:</strong> {{ selectedDrive.description }}</p>
                     <p><strong>Salary:</strong> {{ selectedDrive.salary }}</p>
                     <p><strong>Location:</strong> {{ selectedDrive.location }}</p>
-                    <button @click="closeDetails">Back</button>
+                    <button class="btn btn-secondary mt-2" @click="closeDetails">Back</button>
+            </div>
             </div>
         </section>
-        <section>
-            <h2>All Applications</h2>
-            <table>
+        <section class="card p-3 mb-4 shadow-sm">
+            <h4 class="border-bottom pb-2 mb-3">All Applications</h4>
+            <table class="table table-bordered table-hover mt-3">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -68,19 +103,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                <tr v-for="application in applications" :key="application.id", class="row">
+                <tr v-for="application in applications" :key="application.id">
                     <td>{{ application.id }}</td>
                     <td>{{ application.name }}</td>
                     <td>{{ application.company_name }}</td>
                     <td>{{ application.drive_name }}</td>
                     <td>{{ application.applied_at }}</td>
                     <td>
-                        <button @click="viewApplication(application)">View</button>
+                        <button class="btn btn-sm btn-primary" @click="viewApplication(application)">View</button>
                     </td>
                 </tr>
                 </tbody>
             </table>
-            <div v-if="showApplicationDetails" class="popup">
+            <div v-if="showApplicationDetails" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50">
+            <div v-if="showApplicationDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:400px;">
                     <h3>Student Application</h3>
                     <p><strong>Student Name:</strong> {{ selectedApplication.name }}</p>
                     <p><strong>Department:</strong> {{ selectedApplication.department }}</p>    
@@ -89,7 +125,8 @@
                     <p><strong>Date Applied:</strong> {{ selectedApplication.applied_at }}</p>
                     <p><strong>Status:</strong> {{ selectedApplication.status }}</p>
                     <p><strong>Remark:</strong> {{ selectedApplication.remark }}</p>
-                    <button @click="closeApplicationDetails">Back</button>
+                    <button class="btn btn-secondary mt-2" @click="closeApplicationDetails">Back</button>
+            </div>
             </div>
         </section>
     </div>
@@ -107,7 +144,8 @@
                 selectedDrive: null,
                 showDetails: false,
                 selectedApplication: null,
-                showApplicationDetails: false
+                showApplicationDetails: false,
+                searchQuery: ''
             };
         },
         async mounted() {
@@ -326,11 +364,39 @@
                 localStorage.removeItem("token");
                 this.$router.push("/login");
             }
+        }, computed: {
+            filteredCompanies() {
+                return this.companies.filter(company =>
+                    company.company_name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            },
+            filteredStudents() {
+                return this.students.filter(student =>
+                    student.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            },
+            filteredCompanyApplications() {
+                return this.company_applications.filter(application =>
+                    application.company_name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            },
+            filteredDrives() {
+                return this.ongoing_drives.filter(drive =>
+                    drive.drive_name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            },
+            filteredApplications() {
+                return this.applications.filter(application =>
+                    application.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    application.company_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    application.drive_name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            }
         }
     };
 </script>
 
-<style scoped>
+<!-- <style scoped>
     .admin-dashboard {
         padding: 20px;
     }
@@ -355,4 +421,4 @@
         padding: 8px;
         text-align: left;
     }
-</style>
+</style> -->
