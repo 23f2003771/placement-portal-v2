@@ -107,6 +107,9 @@
                 </tbody>
             </table>
         </section>
+        <section class="export-csv">
+            <button @click="exportCSV">Export Data as CSV</button>
+        </section>
     </div>
 </template>
 
@@ -182,6 +185,31 @@
 
                 } catch (error) {
                     console.error("Error applying to drive:", error);
+                }
+            },
+            async exportCSV() {
+                try {
+                    const token = localStorage.getItem("token");
+                    if (!token) {
+                        console.error("No token found. Please log in.");
+                        return;
+                    }
+
+                    const response = await fetch("http://localhost:5000/export/csv", {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        alert("CSV report generation started. You will receive an email once it's ready.");
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Failed to start CSV export: ${errorData.message}`);
+                    }
+                } catch (error) {
+                    console.error("Error exporting CSV:", error);
                 }
             },
             viewdrives(company) {

@@ -1,10 +1,12 @@
+import os
+import csv
 from email.mime import application
-
 from flask_restful import Api, Resource
 from flask import app, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_caching import Cache
 from datetime import datetime
+from celery_tasks import csv_report
 from models import db, User, StudentProfile, CompanyProfile, PlacementDrive, Application
 
 
@@ -338,3 +340,39 @@ class StudentDashboard(Resource):
         return {"message": "Applied to drive successfully!"}, 201
     
 api.add_resource(StudentDashboard, '/student/dashboard', '/student/dashboard/<int:id>')
+
+
+class CSVExport(Resource):
+
+    @jwt_required()
+    def post(self):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if user.role not in ["student", "company"]:
+            return {"message": "Unauthorized Access!"}, 403
+        
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+
+        if not user:
+            return {"message": "User not found!"}, 404
+        
+        os.makedirs("static", exist_ok=True)
+        filepath = os.path.join("static", get_jwt_identity().replace("@", "_") + "_report.csv")
+        with open(filepath, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            if user.role == "student":
+                writer.writerow(["Application ID", "Drive ID", "Drive Name", "Company Name", "Job Title", "Status", "Remark"])
+                applications = Application.query.filter_by(student_id=user.student_profile.id).all()
+                for app in applications:
+                    writer.writerow([app.id, app.drive_id, app.drive.drive_name, app.drive.company.company_name, app.drive.job_title, app.status, app.remark])
+            elif user.role == "company":
+                writer.writerow(["Drive ID", "Job Title", "Total Applications", "Total Shortlisted", "Total Interviewed", "Total Selected"])
+                drives = PlacementDrive.query.filter_by(company_id=user.company_profile.id).all()
+                for drive in drives:
+                    writer.writerow([drive.id, drive.job_title, len(drive.applications), len(drive.applications.filter_by(status="shortlisted").all()), len(drive.applications.filter_by(status="interview").all()), len(drive.applications.filter_by(status="selected").all())])
+
+        file_url = f"http://127.0.0.1:5000/static/{get_jwt_identity().replace("@", "_")}_report.csv"
+        csv_report.delay(email=get_jwt_identity(), file_url=file_url)
+
+        return {"message": "CSV report generation started. You will receive an email once it's ready."}, 202
+    
+api.add_resource(CSVExport, '/export/csv')

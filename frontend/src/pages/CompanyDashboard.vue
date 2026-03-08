@@ -108,6 +108,9 @@
                 <button @click="closeDetails">Back</button>
             </div>
         </section>
+        <section class="export-csv">
+            <button @click="exportCSV">Export Data as CSV</button>
+        </section>
     </div>
 </template>
 
@@ -256,6 +259,30 @@ export default {
                 alert("Application status updated successfully!");
             } catch (error) {
                 alert("Failed to update application status " + error.message);
+            }
+        },
+        async exportCSV() {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    this.$router.push("/login");
+                    return;
+                }
+
+                const response = await fetch("http://localhost:5000/export/csv", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to start CSV export");
+                }
+
+                alert("CSV export started. You will receive an email once it's ready.");
+            } catch (error) {
+                alert("Failed to start CSV export " + error.message);
             }
         },
         viewDetails(application) {
