@@ -22,15 +22,11 @@
     <div class="container mt-4 shadow-sm p-3 bg-light rounded" v-if="searchQuery.trim().length > 0">
     <ul class="list-group">
         <li v-for="company in filteredCompanies" :key="'c-' + company.id" class="list-group-item">
-        {{ company.company_name }} - {{ company.email }} - {{ company.website }} - {{ company.approval_status }}</li>
+            <strong>Company Name: </strong>{{ company.company_name }} | <strong>Email: </strong>{{ company.email }} | <strong>Website: </strong>{{ company.website }} | <strong>Approval Status: </strong>{{ company.approval_status }}</li>
         <li v-for="student in filteredStudents" :key="'s-' + student.id" class="list-group-item">
-        {{ student.full_name }} - {{ student.email }} - {{ student.branch }} - {{ student.cgpa }} - {{ student.is_blacklisted }}</li>
-        <li v-for="application in filteredCompanyApplications" :key="'ca-' + application.id" class="list-group-item">
-        {{ application.company_name }} - {{ application.status }}</li>
+            <strong>Full Name: </strong>{{ student.full_name }} | <strong>Email: </strong>{{ student.email }} | <strong>Branch: </strong>{{ student.branch }} | <strong>CGPA: </strong>{{ student.cgpa }} | <strong>Blacklisted: </strong>{{ student.is_blacklisted }}</li>
         <li v-for="drive in filteredDrives" :key="'d-' + drive.id" class="list-group-item">
-        {{ drive.drive_name }} - {{ drive.description }} - {{ drive.job_title }} - {{ drive.salary }} - {{ drive.location }}</li>
-        <li v-for="application in filteredApplications" :key="'a-' + application.id" class="list-group-item">
-        {{ application.name }} - {{ application.company_name }} - {{ application.drive_name }}</li>
+            <strong>Drive Name: </strong>{{ drive.drive_name }} | <strong>Description: </strong>{{ drive.description }} | <strong>Job Title: </strong>{{ drive.job_title }} | <strong>Salary: </strong>{{ drive.salary }} | <strong>Location: </strong>{{ drive.location }}</li>
     </ul>
     </div>
         <section class="card p-3 mb-4 shadow-sm">
@@ -77,7 +73,6 @@
                 </tr>
                 </tbody>
             </table>
-            <div v-if="showDetails" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50">
             <div v-if="showDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:400px;">
                     <h3>{{ selectedDrive.drive_name }}</h3>
                     <p><strong>Job Title:</strong> {{ selectedDrive.job_title }}</p>
@@ -86,7 +81,6 @@
                     <p><strong>Salary:</strong> {{ selectedDrive.salary }}</p>
                     <p><strong>Location:</strong> {{ selectedDrive.location }}</p>
                     <button class="btn btn-secondary mt-2" @click="closeDetails">Back</button>
-            </div>
             </div>
         </section>
         <section class="card p-3 mb-4 shadow-sm">
@@ -115,7 +109,6 @@
                 </tr>
                 </tbody>
             </table>
-            <div v-if="showApplicationDetails" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50">
             <div v-if="showApplicationDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:400px;">
                     <h3>Student Application</h3>
                     <p><strong>Student Name:</strong> {{ selectedApplication.name }}</p>
@@ -126,7 +119,6 @@
                     <p><strong>Status:</strong> {{ selectedApplication.status }}</p>
                     <p><strong>Remark:</strong> {{ selectedApplication.remark }}</p>
                     <button class="btn btn-secondary mt-2" @click="closeApplicationDetails">Back</button>
-            </div>
             </div>
         </section>
     </div>
@@ -362,6 +354,7 @@
             },
             async logout() {
                 localStorage.removeItem("token");
+                localStorage.removeItem("role");
                 this.$router.push("/login");
             }
         }, computed: {
@@ -375,50 +368,11 @@
                     student.full_name.toLowerCase().includes(this.searchQuery.toLowerCase())
                 );
             },
-            filteredCompanyApplications() {
-                return this.company_applications.filter(application =>
-                    application.company_name.toLowerCase().includes(this.searchQuery.toLowerCase())
-                );
-            },
             filteredDrives() {
                 return this.ongoing_drives.filter(drive =>
                     drive.drive_name.toLowerCase().includes(this.searchQuery.toLowerCase())
-                );
-            },
-            filteredApplications() {
-                return this.applications.filter(application =>
-                    application.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                    application.company_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                    application.drive_name.toLowerCase().includes(this.searchQuery.toLowerCase())
                 );
             }
         }
     };
 </script>
-
-<!-- <style scoped>
-    .admin-dashboard {
-        padding: 20px;
-    }
-    .row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 5px;
-        border: 1px solid #ccc;
-        justify-content: space-between;
-        padding: 10px;
-        margin-top: 8px;
-    }
-    section {
-        margin-bottom: 30px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    th, td {
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: left;
-    }
-</style> -->

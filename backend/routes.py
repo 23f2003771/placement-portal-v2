@@ -207,7 +207,7 @@ class CompanyDashboard(Resource):
                 applications = []
                 for apl in drive.applications:
                     applications.append({"id": apl.id, "student_email": apl.student.user.email, "full_name": apl.student.full_name, "branch": apl.student.branch, "year": apl.student.year, "cgpa": apl.student.cgpa, "phone": apl.student.phone, "resume_path": apl.student.resume_path, "status": apl.status})
-                ongoing_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "deadline": drive.application_deadline.isoformat(), "applications": applications})
+                ongoing_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "deadline": drive.application_deadline.isoformat(), "applications": applications, "salary": drive.salary, "location": drive.location})
             elif drive.status == "completed":
                 closed_drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "deadline": drive.application_deadline.isoformat()})
         
@@ -222,12 +222,12 @@ class CompanyDashboard(Resource):
         
         data = request.get_json()
 
-        if not data or 'drive_name' not in data or 'job_title' not in data or 'description' not in data or 'application_deadline' not in data or 'eligiblility_criteria' not in data or 'interview_type' not in data or not data['drive_name'] or not data['job_title'] or not data['description'] or not data['application_deadline'] or not data['eligiblility_criteria'] or not data['interview_type']:
+        if not data or 'drive_name' not in data or 'job_title' not in data or 'description' not in data or 'application_deadline' not in data or 'eligiblility_criteria' not in data or 'interview_type' not in data or 'salary' not in data or 'location' not in data or not data['drive_name'] or not data['job_title'] or not data['description'] or not data['application_deadline'] or not data['eligiblility_criteria'] or not data['interview_type'] or not data['salary'] or not data['location']:
             return {'message': "Incomplete Data!"}, 400
         
         deadline = datetime.strptime(data['application_deadline'], "%Y-%m-%d")
         
-        new_drive = PlacementDrive(company_id=user.company_profile.id, drive_name=data['drive_name'], job_title=data['job_title'], job_description=data['description'], application_deadline=deadline, eligiblility_criteria=data['eligiblility_criteria'], interview_type=data['interview_type'])
+        new_drive = PlacementDrive(company_id=user.company_profile.id, drive_name=data['drive_name'], job_title=data['job_title'], job_description=data['description'], application_deadline=deadline, eligiblility_criteria=data['eligiblility_criteria'], interview_type=data['interview_type'], salary=data['salary'], location=data['location'])
         
         db.session.add(new_drive)
         db.session.commit()
@@ -302,7 +302,7 @@ class StudentDashboard(Resource):
             drives = []
             for drive in comp.drives:
                 if drive.status == "ongoing":
-                    drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "application_deadline": drive.application_deadline.isoformat(), "eligiblility_criteria": drive.eligiblility_criteria, "interview_type": drive.interview_type})
+                    drives.append({"id": drive.id, "drive_name": drive.drive_name, "job_title": drive.job_title, "description": drive.job_description, "application_deadline": drive.application_deadline.isoformat(), "eligiblility_criteria": drive.eligiblility_criteria, "interview_type": drive.interview_type, "salary": drive.salary, "location": drive.location})
             organizations.append({"id": comp.id, "company_name": comp.company_name, "hr_contact": comp.hr_contact, "website": comp.website, "description": comp.description, "drives": drives})
         
         history = []

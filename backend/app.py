@@ -53,8 +53,13 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(hour=10, minute=0),
     },
 
-    "monthly-reports": {
-        "task": "celery_tasks.monthly_report",
+    "monthly-reports-companies": {
+        "task": "celery_tasks.monthly_report_companies",
+        "schedule": crontab( day_of_month=1, minute=0),
+    },
+
+    "monthly-report-admin":{
+        "task": "celery_tasks.monthly_report_admin",
         "schedule": crontab( day_of_month=1, minute=0),
     }
 }

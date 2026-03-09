@@ -1,20 +1,32 @@
 <template>
-    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-semibold" href="#">Placement Portal - Student Dashboard</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-semibold" href="#">Placement Portal - Student Dashboard</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+            <form class="d-flex me-3" role="search" @submit.prevent>
+                <input class="form-control me-2" type="search" placeholder="Search" v-model="searchQuery" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            <ul class="navbar-nav mb-2 mb-lg-0">
+                <li class="nav-item">
                     <a class="nav-link text-danger" style="cursor:pointer;" @click="logout">Logout</a>
-                    </li>
-                </ul>
-            </div>
+                </li>
+            </ul>
         </div>
+    </div>
     </nav>
     <div class="container mt-4 mb-5">
+        <div class="container mt-4 shadow-sm p-3 bg-light rounded" v-if="searchQuery.trim().length > 0">
+            <ul class="list-group">
+                <li v-for="company in filteredCompanies" :key="'c-' + company.id" class="list-group-item">
+                    <strong>Company Name: </strong>{{ company.company_name }} | <strong>Contact: </strong>{{ company.hr_contact }} | <strong>Website: </strong>{{ company.website }}</li>
+                <li v-for="drive in filteredDrives" :key="'d-' + drive.id" class="list-group-item">
+                    <strong>Drive Name: </strong>{{ drive.drive_name }} | <strong>Job Title: </strong>{{ drive.job_title }} | <strong>Deadline: </strong>{{ drive.application_deadline }} | <strong>Eligibility: </strong>{{ drive.eligiblility_criteria }} | <strong>Interview Type: </strong>{{ drive.interview_type }}</li>
+            </ul>
+        </div>
         <section class="card shadow-sm p-3 mb-4">
             <h4 class="mb-3 border-bottom pb-2">Available Companies and Drives</h4>
             <div v-for="company in organizations" :key="company.id" class="company-card">
@@ -59,6 +71,8 @@
                 <p><strong>Description:</strong> {{ selectedDrive.description }}</p>
                 <p><strong>Application Deadline:</strong> {{ selectedDrive.application_deadline }}</p>
                 <p><strong>Eligibility Criteria:</strong> {{ selectedDrive.eligiblility_criteria }}</p>
+                <p><strong>Salary:</strong> {{ selectedDrive.salary }}</p>
+                <p><strong>Location:</strong> {{ selectedDrive.location }}</p>
                 <p><strong>Interview Type:</strong> {{ selectedDrive.interview_type }}</p>
                 <button class="btn btn-success btn-sm me-2" @click="applyToDrive(selectedDrive.id)">Apply to Drive</button>
                 <button class="btn btn-secondary mt-2" @click="selectedDrive = null; showDetails = false">Back</button>
@@ -141,7 +155,8 @@
                 showDetails: false,
                 showHistory: false,
                 selectedAppliedDrive: null,
-                showAppliedDetails: false
+                showAppliedDetails: false,
+                searchQuery: ''
 
             }
         },
@@ -241,8 +256,23 @@
             },
             async logout() {
                 localStorage.removeItem("token");
+                localStorage.removeItem("role");
                 this.$router.push("/login");
             }
+        }, computed : {
+
+                filteredCompanies() {
+                    return this.organizations.filter(company =>
+                    company.company_name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                    );
+                },
+                filteredDrives() {
+                    return this.organizations.flatMap(org => org.drives).filter(drive =>
+                    drive.drive_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    drive.job_title.toLowerCase().includes(this.searchQuery.toLowerCase())
+                    );
+                }
+            
         }
     }
 

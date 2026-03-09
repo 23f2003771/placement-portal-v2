@@ -30,7 +30,7 @@ def daily_reminder():
 
 
 @shared_task
-def monthly_report():
+def monthly_report_companies():
 
     companies = CompanyProfile.query.filter_by(is_blacklisted=False).all()
 
@@ -68,6 +68,33 @@ def monthly_report():
         send_email(company.user.email, subject, body)
 
     return "Monthly Placement Report sent"
+
+
+@shared_task
+def monthly_report_admin():
+
+    completed_drives = PlacementDrive.query.filter_by(status="completed").count()
+    ongoing_drives = PlacementDrive.query.filter_by(status="ongoing").count()
+    applied_students = Application.query.filter_by(status="applied").count()
+    selected_students = Application.query.filter_by(status="selected").count()
+
+    subject = "Monthly Placement Report"
+
+    body = f"""
+    Hello Admin,
+    Here's your monthly placement report from the Placement Portal v2.
+
+    Companies ran total of { completed_drives + ongoing_drives } Placement drives on our Placement Portal from which
+    { completed_drives } drives are already concluded and { ongoing_drives } drives are still ongoing.
+
+    Currently we have total of { applied_students } active student applications and { selected_students } students are alredy selected
+    for the companies they applied for.
+
+    For detailed view go to admnin dashboard.
+
+    """
+
+    send_email('admin@gmail.com', subject, body)
 
 
 @shared_task

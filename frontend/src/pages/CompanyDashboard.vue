@@ -15,21 +15,6 @@
         </div>
     </nav>
     <div class="container mt-4 mb-5">
-        <nav class="navbar navbar-expand-lg bg-white shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-semibold" href="#">Placement Portal - Company Dashboard</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link text-danger" style="cursor:pointer;" @click="logout">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        </nav>
         <div class="first-row">
         <section class="card shadow-sm p-3 mb-4">
             <h4 class="mb-3 border-bottom pb-2">Create New Placement Drive</h4>
@@ -39,6 +24,8 @@
                 <textarea class="form-control" v-model="job_description" placeholder="Job Description" required></textarea>
                 <input class="form-control" v-model="eligiblility_criteria" placeholder="Eligibility Criteria" required />
                 <input class="form-control" v-model="application_deadline" type="date" placeholder="Application Deadline" required />
+                <input class="form-control" v-model="salary" placeholder="Salary" required />
+                <input class="form-control" v-model="location" placeholder="Location" required />
                 <select class="form-select" v-model="interview_type" required>
                     <option value="" disabled>Select Interview Type</option>
                     <option value="online">Online</option>
@@ -102,7 +89,7 @@
                     <tbody>
                         <tr v-for="application in selectedDrive.applications" :key="application.id">
                             <td>{{ application.id }}</td>
-                            <td>{{ application.student_name }}</td>
+                            <td>{{ application.full_name }}</td>
                             <td>{{ application.status }}</td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary" @click="viewDetails(application)">View Details</button>
@@ -114,12 +101,12 @@
             </div>
 
             <div v-if="showDetails" class="position-fixed top-50 start-50 translate-middle bg-white p-4 shadow rounded" style="z-index:1050; width:600px;">
-                <h3>Application Details for {{ selectedApplication.full_name }}</h3>
+                <h3>Application Details : {{ selectedApplication.full_name }}</h3>
                 <p><strong>Application ID:</strong> {{ selectedApplication.id }}</p>
                 <p><strong>Branch Name:</strong> {{ selectedApplication.branch }}</p>
                 <p><strong>CGPA:</strong> {{ selectedApplication.cgpa }}</p>
                 <p><strong>Email:</strong> {{ selectedApplication.student_email }}</p>
-                <p><strong>Resume Link:</strong> <a :href="selectedApplication.resume_path" target="_blank">View Resume</a></p>
+                <p><strong>Resume Link:</strong> <a :href="'http://' + selectedApplication.resume_path" target="_blank">View Resume</a></p>
                 <p><strong>Status:</strong> {{ selectedApplication.status }}</p>
                 <div class="status-radios">
                     <input v-model="remark" placeholder="Add Remark (optional)" />
@@ -156,6 +143,8 @@ export default {
             job_description: "",
             eligiblility_criteria: "",
             application_deadline: "",
+            salary: "",
+            location: "",
             interview_type: "",
             remark: "",
             updated_status: "applied",
@@ -212,7 +201,9 @@ export default {
                         description: this.job_description,
                         application_deadline: this.application_deadline,
                         eligiblility_criteria: this.eligiblility_criteria,
-                        interview_type: this.interview_type
+                        interview_type: this.interview_type,
+                        salary: this.salary,
+                        location: this.location
                     })
                 });
 
@@ -333,6 +324,7 @@ export default {
         },
         async logout() {
             localStorage.removeItem("token");
+            localStorage.removeItem("role");
             this.$router.push("/login");
         }
     }

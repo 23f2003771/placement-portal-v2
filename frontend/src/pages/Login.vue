@@ -49,7 +49,6 @@
 
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('role',data.login_data.role)
-                    localStorage.setItem('name',data.login_data.name)
 
                     if (data.login_data.role === 'student') {
                         this.$router.push('/student-dashboard');
