@@ -16,12 +16,26 @@ def daily_reminder():
         subject = "Interview Reminder"
 
         body = f"""
-        Hello {application.student.full_name},
+        <div>
+            <h3>Interview Notification</h3>
+            
+            <p>Hello <strong>{application.student.full_name}</strong>,</p>
 
-        Please visit the placement portal to check new internships.
+            <p><strong>Interview Details:</strong></p>
+            <ul>
+                <li><strong>Position:</strong> {application.drive.job_title}</li>
+                <li><strong>Company:</strong> {application.drive.company.company_name}</li>
+            </ul>
 
-        Regards,
-        Placement Portal
+            <p><strong>Company Remarks:</strong></p>
+            <blockquote>{application.remark}</blockquote>
+
+            <p>Please make sure to prepare well and be on time for the interview.</p>
+
+            <hr>
+            <p>Regards,<br>
+            <strong>Placement Portal</strong></p>
+        </div>
         """
 
         send_email(application.student.user.email, subject, body)
@@ -54,15 +68,39 @@ def monthly_report_companies():
         subject = "Monthly Placement Report"
 
         body = f"""
-        Hello {company.company_name},
-        Here's your monthly placement report from the Placement Portal v2.
+        <div>
+            <h3>Monthly Placement Report</h3>
+            
+            <p>Hello <strong>{company.company_name}</strong>,</p>
+            
+            <p>Here's your monthly placement report from the <strong>Placement Portal v2</strong>.</p>
+            
+            <p><strong>Monthly Activity Summary:</strong></p>
+            <table border="1" cellpadding="10" cellspacing="0">
+                <tr>
+                    <td><strong>Total Applications</strong></td>
+                    <td>{total}</td>
+                </tr>
+                <tr>
+                    <td><strong>Shortlisted</strong></td>
+                    <td>{shortlisted}</td>
+                </tr>
+                <tr>
+                    <td><strong>Selected for Interview</strong></td>
+                    <td>{interview}</td>
+                </tr>
+                <tr>
+                    <td><strong>Successfully Hired</strong></td>
+                    <td><strong>{hired}</strong></td>
+                </tr>
+            </table>
 
-        You Received {total} applications from our students this month.
-        Out of those {shortlisted} students we shortlisted, {interview} students were selected for interviews, and {hired} were hired.
+            <p>We hope you found the right talent for your organization. Please log in to your dashboard to view & download the detailed report and manage your placement drives.</p>
 
-
-        We hope you found the right talent for your organization. Please log in to your dashboard to view & download detailed report and manage your placement drives.
-        
+            <hr>
+            <p>Regards,<br>
+            <strong>Placement Portal Team</strong></p>
+        </div>
         """
 
         send_email(company.user.email, subject, body)
@@ -81,17 +119,45 @@ def monthly_report_admin():
     subject = "Monthly Placement Report"
 
     body = f"""
-    Hello Admin,
-    Here's your monthly placement report from the Placement Portal v2.
+    <div>
+        <h2>Monthly Admin Placement Report</h2>
+        
+        <p>Hello <strong>Admin</strong>,</p>
+        
+        <p>Here is the monthly summary of activities on the <strong>Placement Portal v2</strong>.</p>
+        
+        <h3>Drive Statistics</h3>
+        <table border="1" cellpadding="8" cellspacing="0">
+            <tr bgcolor="#f2f2f2">
+                <td><strong>Category</strong></td>
+                <td><strong>Count</strong></td>
+            </tr>
+            <tr>
+                <td>Total Placement Drives</td>
+                <td>{completed_drives + ongoing_drives}</td>
+            </tr>
+            <tr>
+                <td>Concluded Drives</td>
+                <td>{completed_drives}</td>
+            </tr>
+            <tr>
+                <td>Ongoing Drives</td>
+                <td>{ongoing_drives}</td>
+            </tr>
+        </table>
 
-    Companies ran total of { completed_drives + ongoing_drives } Placement drives on our Placement Portal from which
-    { completed_drives } drives are already concluded and { ongoing_drives } drives are still ongoing.
+        <h3>Student Participation</h3>
+        <ul>
+            <li><strong>Active Student Applications:</strong> {applied_students}</li>
+            <li><strong>Selected Students:</strong> {selected_students}</li>
+        </ul>
 
-    Currently we have total of { applied_students } active student applications and { selected_students } students are alredy selected
-    for the companies they applied for.
-
-    For detailed view go to admnin dashboard.
-
+        <p>For a more detailed view, please log in to your <strong>Admin Dashboard</strong>.</p>
+        
+        <hr>
+        <p>Regards,<br>
+        <strong>Placement Portal System</strong></p>
+    </div>
     """
 
     send_email('admin@gmail.com', subject, body)

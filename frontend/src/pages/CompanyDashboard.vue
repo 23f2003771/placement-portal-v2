@@ -323,6 +323,19 @@ export default {
             this.selectedDrive = null;
         },
         async logout() {
+            const token = localStorage.getItem('token');
+            if (!token) {             
+                this.$router.push('/login');
+                return;
+            }
+
+            const response = await fetch('http://localhost:5000/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+                
             localStorage.removeItem("token");
             localStorage.removeItem("role");
             this.$router.push("/login");

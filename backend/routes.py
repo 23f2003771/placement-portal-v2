@@ -376,3 +376,18 @@ class CSVExport(Resource):
         return {"message": "CSV report generation started. You will receive an email once it's ready."}, 202
     
 api.add_resource(CSVExport, '/export/csv')
+
+
+class Logout(Resource):
+
+    @jwt_required()
+    def post(self):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if not user:
+            return {"message": "User not found! Please login first."}, 404
+        
+        cache.delete(dashboard_cache_key())
+
+        return {"message": "Logout successful! Please discard your token on client side."}, 200
+
+api.add_resource(Logout, '/logout')
